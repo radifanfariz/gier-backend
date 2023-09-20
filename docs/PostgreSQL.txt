@@ -1,0 +1,4 @@
+PostgreSQL 14.8
+
+147.139.142.75:5432
+gier | QXoXpabv2FV6n0QB5uny

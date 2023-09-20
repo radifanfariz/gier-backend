@@ -1,0 +1,1 @@
+sequelize-auto -h 147.139.142.75 -d gier_dev -u gier -x QXoXpabv2FV6n0QB5uny -p 5432 --dialect postgres -c E:\Projects\nodejs\gier\gier-backend\app\models -o E:\Projects\nodejs\gier\gier-backend\app\models -t do_sales
