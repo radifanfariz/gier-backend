@@ -9,39 +9,41 @@ const Op = db.Sequelize.Op;
 exports.findAll = (req, res) => {
   const arrayReq = req.body;
 
-  const whereCondition = arrayReq.reduce((result, item) => {
-    const operatorKey = (() => {
-      switch (item.operator) {
-        case "OR":
-          return Op.or;
-        case "AND":
-          return Op.and;
-        default:
-          return Op.and;
-      }
-    })();
+  const conditions = arrayReq.map((item, index) => {
+    const operator =
+      index < arrayReq.length - 1
+        ? item.operator === "OR"
+          ? " OR "
+          : " AND "
+        : "";
+    const columnName = item.column_name;
+    const itemName = Array.isArray(item.item_name)
+      ? item.item_name
+      : [item.item_name];
 
-    return {
-      ...result,
-      [operatorKey]: {
-        ...(result[operatorKey] || {}),
-        [item.column_name]: isValidDate(item.item_name[0],"yyyy-MM-dd")
-          ? {
-              [Op.between]: Array.isArray(item.item_name)
-                ? item.item_name
-                : [item.item_name, new Date()],
-            }
-          : {
-              [Op.in]: Array.isArray(item.item_name)
-                ? item.item_name
-                : [item.item_name],
-            },
-      },
-    };
-  }, {});
+    const subConditions = [];
+
+    if (isValidDate(itemName[0 | 1], "yyyy-MM-dd")) {
+      // If it's a date, use BETWEEN
+      const startDate = itemName[0] || "CURRENT_TIMESTAMP";
+      const endDate = itemName[1] || "CURRENT_TIMESTAMP";
+      subConditions.push(
+        `"${columnName}" BETWEEN '${startDate}' AND '${endDate}'`
+      );
+    } else {
+      // Otherwise, use "="
+      subConditions.push(`"${columnName}" = '${itemName}'`);
+    }
+
+    return `${subConditions} ${operator}`;
+  });
+
+  const whereCondition = `${conditions.join(" ")}`;
+
+  // console.log(whereCondition);
 
   SalesActivity.findAll({
-    where: whereCondition,
+    where: sequelize.literal(whereCondition),
   })
     .then((data) => {
       const successResponse = {
@@ -85,6 +87,7 @@ WHERE
 'Sumber Info',
 'Motif Beli Customer',
 'Asal Data',
+'Kelas',
 'Transmisi',
 'Segmentasi',
 'Sumber Info',
@@ -158,49 +161,48 @@ exports.findByPaging = async (req, res) => {
   const arrayReq = req.body;
 
   try {
-    const whereCondition = arrayReq.reduce((result, item) => {
-      const operatorKey = (() => {
-        switch (item.operator) {
-          case "OR":
-            return Op.or;
-          case "AND":
-            return Op.and;
-          default:
-            return Op.and;
-        }
-      })();
+    const conditions = arrayReq.map((item, index) => {
+      const operator =
+        index < arrayReq.length - 1
+          ? item.operator === "OR"
+            ? " OR "
+            : " AND "
+          : "";
+      const columnName = item.column_name;
+      const itemName = Array.isArray(item.item_name)
+        ? item.item_name
+        : [item.item_name];
   
-      // console.log("Test: "+isValidDate(item.item_name[0],""yyyy-MM-dd""))
+      const subConditions = [];
   
-      return {
-        ...result,
-        [operatorKey]: {
-          ...(result[operatorKey] || {}),
-          [item.column_name]: isValidDate(Array.isArray(item.item_name) ? item.item_name[0] : item.item_name,"yyyy-MM-dd")
-            ? {
-                [Op.between]: Array.isArray(item.item_name)
-                  ? item.item_name
-                  : [item.item_name, new Date()],
-              }
-            : {
-                [Op.in]: Array.isArray(item.item_name)
-                  ? item.item_name
-                  : [item.item_name],
-              },
-        },
-      };
-    }, {});
+      if (isValidDate(itemName[0 | 1], "yyyy-MM-dd")) {
+        // If it's a date, use BETWEEN
+        const startDate = itemName[0] || "CURRENT_TIMESTAMP";
+        const endDate = itemName[1] || "CURRENT_TIMESTAMP";
+        subConditions.push(
+          `"${columnName}" BETWEEN '${startDate}' AND '${endDate}'`
+        );
+      } else {
+        // Otherwise, use "="
+        subConditions.push(`"${columnName}" = '${itemName}'`);
+      }
   
-    // Calculate the total count of matching rows
-    const totalCount = await SalesActivity.count({ where: whereCondition });
-    const { limit, offset } = getPagination(page, perPage, totalCount);
-  
+      return `${subConditions} ${operator}`;
+    });
+
+    const whereCondition = `${conditions.join(" ")}`;
+
     // console.log(whereCondition);
-  
+    // Calculate the total count of matching rows
+    const totalCount = await SalesActivity.count({
+      where: sequelize.literal(whereCondition),
+    });
+    const { limit, offset } = getPagination(page, perPage, totalCount);
+
     await SalesActivity.findAndCountAll({
       limit: limit,
       offset: offset,
-      where: whereCondition,
+      where: sequelize.literal(whereCondition),
     })
       .then((data) => {
         console.log(data);
@@ -238,9 +240,7 @@ exports.findByPaging = async (req, res) => {
         };
         res.status(500).send(errorResponse);
       });
-    
   } catch (error) {
     res.status(500).send("Something went wrong !");
   }
-
 };
