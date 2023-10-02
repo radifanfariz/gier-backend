@@ -7,11 +7,12 @@ const Sequelize = db.Sequelize;
 const Op = db.Sequelize.Op;
 
 exports.findAll = (req, res) => {
-  const arrayReq = req.body;
+  const filteredColumnsReq = req.body.filtered_columns;
+  const excludedColumnsReq = req.body.excluded_columns;
 
-  const conditions = arrayReq.map((item, index) => {
+  const conditions = filteredColumnsReq.map((item, index) => {
     const operator =
-      index < arrayReq.length - 1
+      index < filteredColumnsReq.length - 1
         ? item.operator === "OR"
           ? " OR "
           : " AND "
@@ -43,6 +44,7 @@ exports.findAll = (req, res) => {
   // console.log(whereCondition);
 
   SalesActivity.findAll({
+    attributes: {exclude: excludedColumnsReq},
     where: sequelize.literal(whereCondition),
   })
     .then((data) => {
@@ -77,6 +79,7 @@ WHERE
     columns.column_name in (
     'Kota',
 'Kecamatan',
+'Merk'
 'Model Mobil',
 'Tahun Rakit',
 'Tanggal DO',
@@ -158,12 +161,13 @@ exports.findColumnItems = (req, res) => {
 exports.findByPaging = async (req, res) => {
   const { page, perPage } = req.query;
 
-  const arrayReq = req.body;
+  const filteredColumnsReq = req.body.filtered_columns;
+  const excludedColumnsReq = req.body.excluded_columns;
 
   try {
-    const conditions = arrayReq.map((item, index) => {
+    const conditions = filteredColumnsReq.map((item, index) => {
       const operator =
-        index < arrayReq.length - 1
+        index < filteredColumnsReq.length - 1
           ? item.operator === "OR"
             ? " OR "
             : " AND "
@@ -195,6 +199,7 @@ exports.findByPaging = async (req, res) => {
     // console.log(whereCondition);
     // Calculate the total count of matching rows
     const totalCount = await SalesActivity.count({
+      attributes: {exclude: excludedColumnsReq},
       where: sequelize.literal(whereCondition),
     });
     const { limit, offset } = getPagination(page, perPage, totalCount);
@@ -202,6 +207,7 @@ exports.findByPaging = async (req, res) => {
     await SalesActivity.findAndCountAll({
       limit: limit,
       offset: offset,
+      attributes: {exclude: excludedColumnsReq},
       where: sequelize.literal(whereCondition),
     })
       .then((data) => {
