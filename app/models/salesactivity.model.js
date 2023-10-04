@@ -10,7 +10,19 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true
     },
+    'NIK': {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    'NPWP': {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     'Nomor Handphone': {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    'Nomor Unik': {
       type: DataTypes.STRING,
       allowNull: true
     },

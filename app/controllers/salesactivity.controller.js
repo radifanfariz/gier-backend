@@ -79,7 +79,7 @@ WHERE
     columns.column_name in (
     'Kota',
 'Kecamatan',
-'Merk'
+'Merk',
 'Model Mobil',
 'Tahun Rakit',
 'Tanggal DO',
