@@ -94,6 +94,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+    'Umur Kendaraan': {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     Kilometer: {
       type: DataTypes.INTEGER,
       allowNull: true

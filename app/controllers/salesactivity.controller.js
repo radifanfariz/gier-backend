@@ -17,6 +17,8 @@ exports.findAll = (req, res) => {
           ? " OR "
           : " AND "
         : "";
+    const openBracket = item.open_bracket === "(" ? " ( " : "";
+    const closeBracket = item.close_bracket === ")" ? " ) " : "";
     const columnName = item.column_name;
     const itemName = Array.isArray(item.item_name)
       ? item.item_name
@@ -36,7 +38,7 @@ exports.findAll = (req, res) => {
       subConditions.push(`"${columnName}" = '${itemName}'`);
     }
 
-    return `${subConditions} ${operator}`;
+    return `${openBracket} ${subConditions} ${closeBracket} ${operator}`;
   });
 
   const whereCondition = `${conditions.join(" ")}`;
@@ -44,7 +46,7 @@ exports.findAll = (req, res) => {
   // console.log(whereCondition);
 
   SalesActivity.findAll({
-    attributes: {exclude: excludedColumnsReq},
+    attributes: { exclude: excludedColumnsReq },
     where: sequelize.literal(whereCondition),
   })
     .then((data) => {
@@ -72,7 +74,7 @@ exports.findAllColumn = (req, res) => {
   sequelize
     .query(
       `SELECT 
-    columns.column_name
+      distinct columns.column_name
 FROM 
     information_schema.columns
 WHERE 
@@ -82,6 +84,8 @@ WHERE
 'Merk',
 'Model Mobil',
 'Tahun Rakit',
+'Tahun Produksi',
+'Umur Kendaraan',
 'Tanggal DO',
 'Nama Leasing',
 'Tenor',
@@ -172,13 +176,15 @@ exports.findByPaging = async (req, res) => {
             ? " OR "
             : " AND "
           : "";
+      const openBracket = item.open_bracket === "(" ? " ( " : "";
+      const closeBracket = item.close_bracket === ")" ? " ) " : "";
       const columnName = item.column_name;
       const itemName = Array.isArray(item.item_name)
         ? item.item_name
         : [item.item_name];
-  
+
       const subConditions = [];
-  
+
       if (isValidDate(itemName[0 | 1], "yyyy-MM-dd")) {
         // If it's a date, use BETWEEN
         const startDate = itemName[0] || "CURRENT_TIMESTAMP";
@@ -190,8 +196,8 @@ exports.findByPaging = async (req, res) => {
         // Otherwise, use "="
         subConditions.push(`"${columnName}" = '${itemName}'`);
       }
-  
-      return `${subConditions} ${operator}`;
+
+      return `${openBracket} ${subConditions} ${closeBracket} ${operator}`;
     });
 
     const whereCondition = `${conditions.join(" ")}`;
@@ -199,7 +205,7 @@ exports.findByPaging = async (req, res) => {
     // console.log(whereCondition);
     // Calculate the total count of matching rows
     const totalCount = await SalesActivity.count({
-      attributes: {exclude: excludedColumnsReq},
+      attributes: { exclude: excludedColumnsReq },
       where: sequelize.literal(whereCondition),
     });
     const { limit, offset } = getPagination(page, perPage, totalCount);
@@ -207,7 +213,7 @@ exports.findByPaging = async (req, res) => {
     await SalesActivity.findAndCountAll({
       limit: limit,
       offset: offset,
-      attributes: {exclude: excludedColumnsReq},
+      attributes: { exclude: excludedColumnsReq },
       where: sequelize.literal(whereCondition),
     })
       .then((data) => {
