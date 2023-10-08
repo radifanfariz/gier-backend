@@ -79,6 +79,7 @@ FROM
     information_schema.columns
 WHERE 
     columns.column_name in (
+    'Program TAM',
     'Kota',
 'Kecamatan',
 'Merk',
